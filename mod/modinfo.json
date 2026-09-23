@@ -1,0 +1,11 @@
+﻿{
+  "id": "shrub.speedrunracemode",
+  "name": "Speedrun Race Mode",
+  "version": "1.0.0",
+  "authors": "shrubfromtomorrow",
+  "description": "Put a neat description here",
+  "tags": [],
+  "requirements": [],
+  "requirements_names": [],
+  "checksum_override_version": false
+}
