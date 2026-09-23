@@ -25,7 +25,8 @@ namespace SpeedrunRaceMode
         private static void StoryGameSession_ctor(On.StoryGameSession.orig_ctor orig, StoryGameSession self, SlugcatStats.Name saveStateNumber, RainWorldGame game)
         {
             orig(self, saveStateNumber, game);
-            if (!ModManager.Watcher || saveStateNumber != Watcher.WatcherEnums.SlugcatStatsName.Watcher || !RaceModeConfig.raceMode || RaceModeConfig.startingRoomValue.IsNullOrWhiteSpace()) return; // only do intro skip stuff if empty starting room
+            if (!ModManager.Watcher || saveStateNumber != Watcher.WatcherEnums.SlugcatStatsName.Watcher || !RaceModeConfig.raceMode || 
+                !RaceModeConfig.startRoomSet) return; // only do intro skip stuff if unknown starting room
 
             if (self.game.manager.menuSetup.startGameCondition == ProcessManager.MenuSetup.StoryGameInitCondition.New)
             {
@@ -79,7 +80,7 @@ namespace SpeedrunRaceMode
             {
                 for (int i = 0; i < self.updateList.Count; i++)
                 {
-                    if (RaceModeUndesirableRoomScripts(self.updateList[i]))
+                    if (RaceModeUndesirableRoomScript(self.updateList[i]))
                     {
                         self.updateList[i].Destroy();
                     }
@@ -87,7 +88,7 @@ namespace SpeedrunRaceMode
             } 
         }
 
-        public static bool RaceModeUndesirableRoomScripts(UpdatableAndDeletable item) // most of these won't hit because of cycle 0 protection but better safe than sorry. Let intros run if empty or unknown starting room
+        public static bool RaceModeUndesirableRoomScript(UpdatableAndDeletable item) // most of these won't hit because of cycle 0 protection but better safe than sorry. Let intros run if empty or unknown starting room
         {
             return (item is SU_C04StartUp && RaceModeConfig.startRoomSet) || item is SU_A23FirstCycleMessage || (item is SU_A43SuperJumpOnly && RaceModeConfig.startRoomSet) || item is LF_A03 ||
                 item is GW_C05ArtificerMessage || (item is SpearmasterGateLocation && RaceModeConfig.startRoomSet) || item is SU_SMIntroMessage || item is SU_A42Message || 

@@ -28,10 +28,10 @@ namespace SpeedrunRaceMode
             On.DaddyLongLegs.Eat += DaddyLongLegs_Eat; // Dll
             On.DaddyCorruption.Update += DaddyCorruption_Update; // protorot
             On.Watcher.Loach.Eat += Loach_Eat; // loach
-
+            // Necessary hooks to prevent bugs, not saving the player
             IL.LocustSystem.Swarm.Update += Swarm_Update; // Locusts disband and unleech
             On.BigNeedleWorm.AttachToChunk += BigNeedleWorm_AttachToChunk; // Detach noodlefly
-            // Cosmetic hooks, not saving player
+            // Cosmetic hooks, not saving player nor fixing a bug
             On.Spear.HitSomething += Spear_HitSomething; // Make spears drop where player gets hit
             IL.Lizard.Bite += Lizard_Bite; // Prevent red lizards from forcing item drops
         }
@@ -299,7 +299,7 @@ namespace SpeedrunRaceMode
                 d.Emit(OpCodes.Ldarg_0);
                 d.EmitDelegate((Creature prey, Creature predator) =>
                 {
-                    if (prey is Player p && predator != prey && Helpers.SaveCheck(p)) // pups can die hooray
+                    if (prey is Player p && predator != prey && Helpers.SaveCheck(p)) // pups can die hooray. predator != prey needed because player is attached to player lol
                     {
                         Plugin.Logger.LogInfo("Passed the savecheck");
                         AbstractCreature abstractPredator = predator.abstractCreature;

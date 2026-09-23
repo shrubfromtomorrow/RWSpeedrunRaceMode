@@ -397,7 +397,3 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 .idea/
-
-# Ignore mod output
-mod/plugins/
-mod/newest/plugins/
