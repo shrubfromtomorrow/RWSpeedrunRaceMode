@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
 using Watcher;
@@ -29,7 +31,12 @@ namespace SpeedrunRaceMode
             }
         }
 
-        public static bool SaveCheck(Player p) // only pass if player is not a pup
+        /// <summary>
+        /// Determine if player should be saved from death. Various checks for end of cycle vetos as well as mercy button or if the player is a pup
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public static bool SaveCheck(Player p)
         {
             if (p != null && p.AI == null)
             {
@@ -70,6 +77,10 @@ namespace SpeedrunRaceMode
             return false;
         }
 
+        /// <summary>
+        /// Reset the player state broadly
+        /// </summary>
+        /// <param name="p"></param>
         public static void ResetPlayerState(Player p)
         {
             p.lastStun = 0;
@@ -107,6 +118,10 @@ namespace SpeedrunRaceMode
             }
         }
 
+        /// <summary>
+        /// Free the player from grasps
+        /// </summary>
+        /// <param name="p"></param>
         public static void FreePlayer(Player p)
         {
             if (p.grabbedBy.Count > 0)
@@ -119,12 +134,21 @@ namespace SpeedrunRaceMode
             }
         }
 
+        /// <summary>
+        /// Set player to be saved on the next tick (allow an update tick to run before sending to shortcut to avoid issues)
+        /// </summary>
+        /// <param name="p"></param>
         public static void MarkPlayerToSave(Player p)
         {
             PlayerData data = playerDataTable.GetOrCreateValue(p);
             data.saveMeNextTick = true;
         }
 
+        /// <summary>
+        /// Remove player from room, send them to their most recent shortcut entrance. If there is no shortcut entrance stored for the player, send them to their karma flower growth position, if that is not 
+        /// present, send them to the middle of the first screen of the room
+        /// </summary>
+        /// <param name="p"></param>
         public static void SendPlayerToShorcut(Player p)
         {
             if (playerDataTable.TryGetValue(p, out CWTs.PlayerData playerData) && playerData.destNode != -1)
@@ -156,12 +180,12 @@ namespace SpeedrunRaceMode
                             creature.inShortcut = true;
                             creature.inShortcutVessel = p.inShortcutVessel;
                         }
-                        room.RemoveObject(allConnectedObjects[i].realizedObject);
+                        room!.RemoveObject(allConnectedObjects[i].realizedObject);
                     }
                 }
                 ShortcutHandler.ShortCutVessel playerVessel = new ShortcutHandler.ShortCutVessel(new RWCustom.IntVector2(0, 0), p, room.abstractRoom, 0);
                 playerVessel.entranceNode = playerData.destNode; // entrance node is set to the node the player entered in the previous room. Shortcuthandler picks up which node they should re-enter room from
-                room.game.shortcuts.betweenRoomsWaitingLobby.Add(playerVessel);
+                room.game!.shortcuts.betweenRoomsWaitingLobby.Add(playerVessel);
                 room.PlaySound(SoundID.UI_Multiplayer_Player_Revive);
             }
             else
@@ -179,6 +203,11 @@ namespace SpeedrunRaceMode
             }
         }
 
+        /// <summary>
+        /// Set player without setting all bodychunks to the same pos (avoid flinging)
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="pos"></param>
         public static void GoodHardSet(Player p, Vector2 pos)
         {
             List<Vector2> relativeChunkPositions = new List<Vector2>();
@@ -206,6 +235,96 @@ namespace SpeedrunRaceMode
                     p.bodyChunks[i].pos = p.bodyChunks[0].pos + relativeChunkPositions[i];
                 }
             }
+        }
+
+        /// <summary>
+        /// Get available random starting shelters for race mode. Templated from ExpeditionGame.ExpeditionRandomStarts
+        /// </summary>
+        /// <param name="slug"></param>
+        /// <returns></returns>
+        public static string SpeedrunRandomStart(SlugcatStats.Name slug)
+        {
+            Dictionary<string, int> dictionary = new Dictionary<string, int>();
+            Dictionary<string, List<string>> dictionary2 = new Dictionary<string, List<string>>();
+            List<string> list2 = SlugcatStats.SlugcatStoryRegions(slug);
+            if (File.Exists(AssetManager.ResolveFilePath("speedrunrandomstarts.txt")))
+            {
+                string[] array = File.ReadAllLines(AssetManager.ResolveFilePath("speedrunrandomstarts.txt"));
+                for (int i = 0; i < array.Length; i++)
+                {
+                    if (!array[i].StartsWith("//") && array[i].Length > 0)
+                    {
+                        string text = Regex.Split(array[i], "_")[0];
+                        if (!dictionary2.ContainsKey(text))
+                        {
+                            if (ModManager.MSC || (text != "CC_S06" && text != "CC_S07" && text != "GW_S09" && text != "SH_S11" && text != "SI_S06" && text != "SB_S10")) // DLC shelters in vanilla regions
+                            {
+                                dictionary2.Add(text, new List<string>());
+                            }
+                        }
+                        if (list2.Contains(text))
+                        {
+                            dictionary2[text].Add(array[i]);
+                        }
+                        else if (ModManager.MSC && (slug == SlugcatStats.Name.White || slug == SlugcatStats.Name.Yellow))
+                        {
+                            if (text == "OE")
+                            {
+                                dictionary2[text].Add(array[i]);
+                            }
+                            if (text == "LC")
+                            {
+                                dictionary2[text].Add(array[i]);
+                            }
+                            if (text == "MS" && array[i] != "MS_S07")
+                            {
+                                dictionary2[text].Add(array[i]);
+                            }
+                        }
+
+                        if (dictionary2[text].Contains(array[i]) && !dictionary.ContainsKey(text))
+                        {
+                            dictionary.Add(text, 1);
+                        }
+                    }
+                }
+                global::System.Random random = new global::System.Random();
+                int num = dictionary.Values.Sum();
+                int randomIndex = random.Next(0, num);
+                string key = dictionary.First(delegate (KeyValuePair<string, int> x)
+                {
+                    randomIndex -= x.Value;
+                    return randomIndex < 0;
+                }).Key;
+                int num2 = dictionary2.Values.Select((List<string> list) => list.Count).Sum();
+                string text2 = dictionary2[key].ElementAt(global::UnityEngine.Random.Range(0, dictionary2[key].Count - 1));
+                return text2;
+            }
+            return "SU_S01";
+        }
+
+        /// <summary>
+        /// Get a random room from a random slugcat story region for race mode ending
+        /// </summary>
+        /// <param name="slug"></param>
+        /// <returns></returns>
+        public static string SpeedrunRandomEnd(SlugcatStats.Name slug)
+        {
+            List<string> regions = SlugcatStats.SlugcatStoryRegions(slug);
+            string region = regions[UnityEngine.Random.Range(0, regions.Count)];
+            string roomsPath = AssetManager.ResolveDirectory("World" + Path.DirectorySeparatorChar + region + "-rooms");
+
+            if (roomsPath == null) return "";
+
+            string[] roomFiles = Directory.GetFiles(roomsPath, "*_settings.txt");
+
+            if (roomFiles.Length == 0) return "";
+
+            string randomFile = roomFiles[UnityEngine.Random.Range(0, roomFiles.Length)];
+            string room = Path.GetFileNameWithoutExtension(randomFile);
+            room = room.Substring(0, room.Length - "_settings".Length);
+
+            return room;
         }
     }
 }

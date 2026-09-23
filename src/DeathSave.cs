@@ -299,7 +299,7 @@ namespace SpeedrunRaceMode
                 d.Emit(OpCodes.Ldarg_0);
                 d.EmitDelegate((Creature prey, Creature predator) =>
                 {
-                    if (prey is Player p && Helpers.SaveCheck(p)) // pups can die hooray
+                    if (prey is Player p && predator != prey && Helpers.SaveCheck(p)) // pups can die hooray
                     {
                         Plugin.Logger.LogInfo("Passed the savecheck");
                         AbstractCreature abstractPredator = predator.abstractCreature;

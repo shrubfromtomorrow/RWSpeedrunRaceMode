@@ -27,17 +27,17 @@ namespace SpeedrunRaceMode
 
         public static void ApplyHooks()
         {
-            On.Menu.SlugcatSelectMenu.ctor += SlugcatSelectMenu_ctor;
-            On.Menu.SlugcatSelectMenu.SetChecked += SlugcatSelectMenu_SetChecked;
-            On.Menu.SlugcatSelectMenu.GetChecked += SlugcatSelectMenu_GetChecked;
-            On.SaveState.GetStoryDenPosition += SaveState_GetStoryDenPosition;
-            On.RoomCamera.MoveCamera_Room_int += RoomCamera_MoveCamera_Room_int;
-            On.Menu.Menu.ctor += Menu_ctor;
-            On.Menu.SlugcatSelectMenu.UpdateSelectedSlugcatInMiscProg += SlugcatSelectMenu_UpdateSelectedSlugcatInMiscProg;
+            On.Menu.SlugcatSelectMenu.ctor += SlugcatSelectMenu_ctor; // add racemode config
+            On.Menu.SlugcatSelectMenu.SetChecked += SlugcatSelectMenu_SetChecked; // properly handle race mode checkbox
+            On.Menu.SlugcatSelectMenu.GetChecked += SlugcatSelectMenu_GetChecked; // properly handle race mode checkbox
+            On.SaveState.GetStoryDenPosition += SaveState_GetStoryDenPosition; // set den position on new save
+            On.RoomCamera.MoveCamera_Room_int += RoomCamera_MoveCamera_Room_int; // end timer when reaching ending room
+            On.Menu.Menu.ctor += Menu_ctor; // move infolabel (ui element descriptions) down on slugcat select menu so it doesn't interfere with holdbutton
+            On.Menu.SlugcatSelectMenu.UpdateSelectedSlugcatInMiscProg += SlugcatSelectMenu_UpdateSelectedSlugcatInMiscProg; // reroll race mode stuffs on slugcat change in select menu
 
-            On.HUD.Map.Update += Map_Update;
-            On.HUD.Map.Draw += Map_Draw;
-            On.HUD.Map.ClearSprites += Map_ClearSprites;
+            On.HUD.Map.Update += Map_Update; // add or update death and end label
+            On.HUD.Map.Draw += Map_Draw; // draw death and end label
+            On.HUD.Map.ClearSprites += Map_ClearSprites; // clear death and end label
         }
 
         private static void SlugcatSelectMenu_UpdateSelectedSlugcatInMiscProg(On.Menu.SlugcatSelectMenu.orig_UpdateSelectedSlugcatInMiscProg orig, SlugcatSelectMenu self)
@@ -47,14 +47,14 @@ namespace SpeedrunRaceMode
             {
                 if (raceModeConfig.startingRoom != null)
                 {
-                    string randomShelter = SpeedrunRandomStart(self.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat);
+                    string randomShelter = Helpers.SpeedrunRandomStart(self.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat);
                     raceModeConfig.startingRoom.value = randomShelter;
                     raceModeConfig.startingRoom.description = $"Room where the player will spawn and time will begin ({RaceModeConfig.startingRoomValue})";
                 }
 
                 if (raceModeConfig.endingRoom != null)
                 {
-                    string randomEnd = SpeedrunRandomEnd(self.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat);
+                    string randomEnd = Helpers.SpeedrunRandomEnd(self.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat);
                     raceModeConfig.endingRoom.value = randomEnd;
                     raceModeConfig.endingRoom.description = $"Room where the player will spawn and time will begin ({RaceModeConfig.endingRoomValue})";
                 }
@@ -163,86 +163,6 @@ namespace SpeedrunRaceMode
 
             self.pages[0].subObjects.Add(config);
         }
-
-        public static string SpeedrunRandomStart(SlugcatStats.Name slug) // stolen from expedition random starts
-        {
-            Dictionary<string, int> dictionary = new Dictionary<string, int>();
-            Dictionary<string, List<string>> dictionary2 = new Dictionary<string, List<string>>();
-            List<string> list2 = SlugcatStats.SlugcatStoryRegions(slug);
-            if (File.Exists(AssetManager.ResolveFilePath("speedrunrandomstarts.txt")))
-            {
-                string[] array = File.ReadAllLines(AssetManager.ResolveFilePath("speedrunrandomstarts.txt"));
-                for (int i = 0; i < array.Length; i++)
-                {
-                    if (!array[i].StartsWith("//") && array[i].Length > 0)
-                    {
-                        string text = Regex.Split(array[i], "_")[0];
-                        if (!dictionary2.ContainsKey(text))
-                        {
-                            if (ModManager.MSC || (text != "CC_S06" && text != "CC_S07" && text != "GW_S09" && text != "SH_S11" && text != "SI_S06" && text != "SB_S10")) // DLC shelters in vanilla regions
-                            {
-                                dictionary2.Add(text, new List<string>());
-                            }
-                        }
-                        if (list2.Contains(text))
-                        {
-                            dictionary2[text].Add(array[i]);
-                        }
-                        else if (ModManager.MSC && (slug == SlugcatStats.Name.White || slug == SlugcatStats.Name.Yellow))
-                        {
-                            if (text == "OE")
-                            {
-                                dictionary2[text].Add(array[i]);
-                            }
-                            if (text == "LC")
-                            {
-                                dictionary2[text].Add(array[i]);
-                            }
-                            if (text == "MS" && array[i] != "MS_S07")
-                            {
-                                dictionary2[text].Add(array[i]);
-                            }
-                        }
-                        
-                        if (dictionary2[text].Contains(array[i]) && !dictionary.ContainsKey(text))
-                        {
-                            dictionary.Add(text, 1);
-                        }
-                    }
-                }
-                global::System.Random random = new global::System.Random();
-                int num = dictionary.Values.Sum();
-                int randomIndex = random.Next(0, num);
-                string key = dictionary.First(delegate (KeyValuePair<string, int> x)
-                {
-                    randomIndex -= x.Value;
-                    return randomIndex < 0;
-                }).Key;
-                int num2 = dictionary2.Values.Select((List<string> list) => list.Count).Sum();
-                string text2 = dictionary2[key].ElementAt(global::UnityEngine.Random.Range(0, dictionary2[key].Count - 1));
-                return text2;
-            }
-            return "SU_S01";
-        }
-
-        public static string SpeedrunRandomEnd(SlugcatStats.Name slug)
-        {
-            List<string> regions = SlugcatStats.SlugcatStoryRegions(slug);
-            string region = regions[UnityEngine.Random.Range(0, regions.Count)];
-            string roomsPath = AssetManager.ResolveDirectory("World" + Path.DirectorySeparatorChar + region + "-rooms");
-
-            if (roomsPath == null) return "";
-
-            string[] roomFiles = Directory.GetFiles(roomsPath, "*_settings.txt");
-
-            if (roomFiles.Length == 0) return "";
-
-            string randomFile = roomFiles[UnityEngine.Random.Range(0, roomFiles.Length)];
-            string room = Path.GetFileNameWithoutExtension(randomFile);
-            room = room.Substring(0, room.Length - "_settings".Length);
-
-            return room;
-        }
     }
 
     public class DeathsAndEndLabel
@@ -306,11 +226,11 @@ namespace SpeedrunRaceMode
 
     public class RaceModeConfig : PositionedMenuObject
     {
-        public CheckBox? raceModeToggle;
+        private CheckBox? raceModeToggle;
         public OpTextBox? startingRoom;
-        public MenuLabel? startingRoomLabel;
+        private MenuLabel? startingRoomLabel;
         public OpTextBox? endingRoom;
-        public MenuLabel? endingRoomLabel;
+        private MenuLabel? endingRoomLabel;
 
         public static bool raceMode;
         public static bool startRoomSet = false;
@@ -329,8 +249,8 @@ namespace SpeedrunRaceMode
             raceModeToggle = new CheckBox(menu, this, menu, raceModePos, 65f, menu.Translate("Race mode"), "RACEMODE");
             subObjects.Add(raceModeToggle);
 
-            string randomShelter = UI.SpeedrunRandomStart(menu.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat).ToUpperInvariant();
-            string randomEnd = UI.SpeedrunRandomEnd(menu.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat).ToUpperInvariant();
+            string randomShelter = Helpers.SpeedrunRandomStart(menu.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat).ToUpperInvariant();
+            string randomEnd = Helpers.SpeedrunRandomEnd(menu.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat).ToUpperInvariant();
 
             Vector2 startingRoomOffset = new Vector2(30f, 0f);
             startingRoom = new OpTextBox(new Configurable<string>(randomShelter), startingRoomOffset, 75f) { maxLength = 20 };
