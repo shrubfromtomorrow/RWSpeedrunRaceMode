@@ -16,22 +16,40 @@ HI_S06
 DS_S01r
 DS_S02l
 DS_S04
+DS_S03
 
 //CC - Chimney Canopy (All)
 CC_S01
 CC_S03
 CC_S04
+CC_S05
+// MSC
+CC_S07
+CC_S06
 
 //GW - Garbage Wastes           (All)
 GW_S02
 GW_S06
 GW_S07
+GW_S04
+GW_S05
+GW_S03
+GW_S08
+// MSC
+GW_S09
 
 //SH - Shaded Citadel           (All but Saint)
 SH_S10
 SH_S08
 SH_S02
 SH_S04
+SH_S03
+SH_S01
+SH_S05
+SH_S09
+SH_S07
+// MSC
+SH_S11
 
 //SL - Shoreline                (All but Spearmaster and Artificer)
 SL_S05
@@ -46,6 +64,8 @@ SL_S10
 SI_S05
 SI_S04
 SI_S03
+//MSC
+SI_S06
 
 //LF - Farm Arrays              (All)
 LF_S01
@@ -53,6 +73,7 @@ LF_S02
 LF_S03
 LF_S05
 LF_S07
+LF_S04
 
 //UW - The Exterior             (Survivor, Monk, Hunter, Artificer, Gourmand, Rivulet)
 UW_S07
@@ -61,6 +82,7 @@ UW_S01
 UW_S02
 UW_S05
 UW_S06
+UW_S03
 
 //SS - Five Pebbles             (Survivor, Monk, Hunter, Artificer, Gourmand)
 SS_S02
@@ -73,12 +95,18 @@ SB_S02
 SB_S05
 SB_S06
 SB_S07
+// MSC
+SB_S10
 
 //VS - Pipeyard                 (All)
 VS_S05
 VS_S08
 VS_S01
 VS_S04
+VS_S03
+VS_S06
+VS_S02
+VS_S09
 
 //RM - The Rot                  (Rivulet)
 RM_S01

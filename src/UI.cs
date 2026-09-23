@@ -164,7 +164,7 @@ namespace SpeedrunRaceMode
             self.pages[0].subObjects.Add(config);
         }
 
-        public static string SpeedrunRandomStart(SlugcatStats.Name slug)
+        public static string SpeedrunRandomStart(SlugcatStats.Name slug) // stolen from expedition random starts
         {
             Dictionary<string, int> dictionary = new Dictionary<string, int>();
             Dictionary<string, List<string>> dictionary2 = new Dictionary<string, List<string>>();
@@ -179,7 +179,10 @@ namespace SpeedrunRaceMode
                         string text = Regex.Split(array[i], "_")[0];
                         if (!dictionary2.ContainsKey(text))
                         {
-                            dictionary2.Add(text, new List<string>());
+                            if (ModManager.MSC || (text != "CC_S06" && text != "CC_S07" && text != "GW_S09" && text != "SH_S11" && text != "SI_S06" && text != "SB_S10")) // DLC shelters in vanilla regions
+                            {
+                                dictionary2.Add(text, new List<string>());
+                            }
                         }
                         if (list2.Contains(text))
                         {
@@ -200,6 +203,7 @@ namespace SpeedrunRaceMode
                                 dictionary2[text].Add(array[i]);
                             }
                         }
+                        
                         if (dictionary2[text].Contains(array[i]) && !dictionary.ContainsKey(text))
                         {
                             dictionary.Add(text, 1);

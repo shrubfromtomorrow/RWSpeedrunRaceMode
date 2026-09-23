@@ -144,7 +144,7 @@ namespace SpeedrunRaceMode
         {
             if (Helpers.SaveCheck(self))
             {
-                Plugin.Logger.LogInfo("Player destroyed");
+                Plugin.Logger.LogInfo("Player attempted to be destroyed");
                 Helpers.MarkPlayerToSave(self);
                 return;
             }
