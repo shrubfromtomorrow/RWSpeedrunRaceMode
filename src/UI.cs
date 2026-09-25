@@ -17,6 +17,7 @@ using UnityEngine.UI;
 using static SpeedrunRaceMode.CWTs;
 using System.IO;
 using BepInEx;
+using RWCustom;
 
 namespace SpeedrunRaceMode
 {
@@ -57,6 +58,11 @@ namespace SpeedrunRaceMode
                     string randomEnd = Helpers.SpeedrunRandomEnd(self.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat);
                     raceModeConfig.endingRoom.value = randomEnd;
                     raceModeConfig.endingRoom.description = $"Room where the player will spawn and time will begin ({RaceModeConfig.endingRoomValue})";
+                }
+
+                if (raceModeConfig.clearTime != null)
+                {
+                    raceModeConfig.clearTime.greyedOut = !self.manager.rainWorld.progression.IsThereASavedGame(self.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat);
                 }
             }
         }
@@ -151,6 +157,7 @@ namespace SpeedrunRaceMode
             if (ssmRaceModeConfig.TryGetValue(self, out var raceModeConfig))
             {
                 RaceModeConfig.raceMode = c;
+                
                 raceModeConfig.UpdateRoomOptionVisiblity();
             }
         }
@@ -232,6 +239,10 @@ namespace SpeedrunRaceMode
         public OpTextBox? endingRoom;
         private MenuLabel? endingRoomLabel;
 
+        public OpHoldButton? clearTime;
+
+        private SlugcatSelectMenu? ssm;
+
         public static bool raceMode;
         public static bool startRoomSet = false;
         public static string? startingRoomValue;
@@ -241,6 +252,7 @@ namespace SpeedrunRaceMode
 
         public RaceModeConfig(SlugcatSelectMenu menu, MenuObject owner, Vector2 pos) : base(menu, owner, pos)
         {
+            ssm = menu;
             tabWrapper = new MenuTabWrapper(menu, this);
             raceMode = true;
             subObjects.Add(tabWrapper);
@@ -276,7 +288,63 @@ namespace SpeedrunRaceMode
             endingRoomLabel = new MenuLabel(menu, this, "End room", endingRoomOffset + new Vector2(37f, 40f), Vector2.zero, false);
             subObjects.Add(endingRoomLabel);
 
+            clearTime = new OpHoldButton(new Vector2(-67f, 30f), new Vector2(90f, 28f), "Clear Time", 28f) { description = "Hold to set speedrun timer to 0" };
+            UIelementWrapper clearTimeWrapper = new UIelementWrapper(tabWrapper, clearTime);
+            clearTime.OnPressDone += ClearTime_OnPressDone;
+            clearTime.greyedOut = !ssm.manager.rainWorld.progression.IsThereASavedGame(ssm.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat);
+            subObjects.Add(clearTimeWrapper);
+
             UpdateRoomOptionVisiblity();
+        }
+
+        private void ClearTime_OnPressDone(UIfocusable trigger)
+        {
+            if (ssm != null)
+            {
+                SlugcatStats.Name slugname = ssm.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat;
+                int index = ssm.slugcatColorOrder.IndexOf(slugname);
+
+                if (ssm.slugcatPages[index] is SlugcatSelectMenu.SlugcatPageContinue spc)
+                {
+                    if (SpeedRunTimer.GetCampaignTimeTracker(slugname) != null)
+                    {
+                        SpeedRunTimer.CampaignTimeTracker tracker = new();
+                        ssm.manager.rainWorld.progression.miscProgressionData.campaignTimers.Remove(slugname.value);
+                        ssm.manager.rainWorld.progression.miscProgressionData.campaignTimers.Add(slugname.value, tracker);
+
+                        string labelCurrent = spc.regionLabel.text;
+
+                        string labelNew = Regex.Replace(labelCurrent, @"\([^)]*\)", $"({tracker.TotalFreeTimeSpan.GetIGTFormat(MMF.cfgSpeedrunTimer.Value || menu.manager.rainWorld.options.validation)})");
+
+                        spc.regionLabel.text = labelNew;
+                    }
+                }
+            }
+        }
+
+        public override void Singal(MenuObject sender, string message)
+        {
+            if (message == "CLEARTIME" && ssm != null)
+            {
+                SlugcatStats.Name slugname = ssm.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat;
+                int index = ssm.slugcatColorOrder.IndexOf(slugname);
+
+                if (ssm.slugcatPages[index] is SlugcatSelectMenu.SlugcatPageContinue spc)
+                {
+                    if (SpeedRunTimer.GetCampaignTimeTracker(slugname) != null)
+                    {
+                        SpeedRunTimer.CampaignTimeTracker tracker = new();
+                        ssm.manager.rainWorld.progression.miscProgressionData.campaignTimers.Remove(slugname.value);
+                        ssm.manager.rainWorld.progression.miscProgressionData.campaignTimers.Add(slugname.value, tracker);
+
+                        string labelCurrent = spc.regionLabel.text;
+
+                        string labelNew = Regex.Replace(labelCurrent, @"\([^)]*\)", $"({tracker.TotalFreeTimeSpan.GetIGTFormat(MMF.cfgSpeedrunTimer.Value || menu.manager.rainWorld.options.validation)})");
+
+                        spc.regionLabel.text = labelNew;
+                    }
+                }
+            }
         }
 
         private void EndingRoom_OnValueUpdate(UIconfig config, string value, string oldValue)

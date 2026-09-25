@@ -26,7 +26,7 @@ namespace SpeedrunRaceMode
         {
             orig(self, saveStateNumber, game);
             if (!ModManager.Watcher || saveStateNumber != Watcher.WatcherEnums.SlugcatStatsName.Watcher || !RaceModeConfig.raceMode || 
-                !RaceModeConfig.startRoomSet) return; // only do intro skip stuff if unknown starting room
+                !RaceModeConfig.startRoomSet) return; // only do intro skip stuff if unknown starting room or not race mode
 
             if (self.game.manager.menuSetup.startGameCondition == ProcessManager.MenuSetup.StoryGameInitCondition.New)
             {

@@ -38,7 +38,7 @@ namespace SpeedrunRaceMode
         /// <returns></returns>
         public static bool SaveCheck(Player p)
         {
-            if (p != null && p.AI == null)
+            if (p != null && !p.dead && p.AI == null)
             {
                 bool globalDeathRain = false;
                 bool roomElectricDeath = false;
