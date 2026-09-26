@@ -31,9 +31,41 @@ namespace SpeedrunRaceMode
             // Necessary hooks to prevent bugs, not saving the player
             IL.LocustSystem.Swarm.Update += Swarm_Update; // Locusts disband and unleech
             On.BigNeedleWorm.AttachToChunk += BigNeedleWorm_AttachToChunk; // Detach noodlefly
+            IL.MirosBird.JawSlamShut += MirosBird_JawSlamShut; // Prevent miros birds from being able to grab player in shortcut
             // Cosmetic hooks, not saving player nor fixing a bug
             On.Spear.HitSomething += Spear_HitSomething; // Make spears drop where player gets hit
             IL.Lizard.Bite += Lizard_Bite; // Prevent red lizards from forcing item drops
+        }
+
+        private static void MirosBird_JawSlamShut(ILContext il)
+        {
+            try
+            {
+                ILCursor c = new ILCursor(il);
+                if (!c.TryGotoNext(MoveType.After, x => x.MatchLdflda(typeof(Creature).GetField(nameof(Creature.enteringShortCut)))))
+                {
+                    Plugin.Logger.LogInfo("MirosBird_JawSlamShut failed to match Creature.enteringShortCut");
+                    return;
+                }
+                c.Index++;
+
+                c.Emit(OpCodes.Ldarg_0);
+                c.Emit(OpCodes.Ldloc_2);
+                c.EmitDelegate<Func<bool, MirosBird, int, bool>>((origRet, bird, index) =>
+                {
+                    if (origRet) return origRet;
+                    if (bird.room.abstractRoom.creatures[index].realizedCreature.inShortcut)
+                    {
+                        return true;
+                    }
+                    return origRet;
+                });
+
+            }
+            catch (Exception ex)
+            {
+                Plugin.Logger.LogError($"MirosBird_JawSlamShut threw an exception: {ex}");
+            }
         }
 
         private static void Lizard_Bite(ILContext il)

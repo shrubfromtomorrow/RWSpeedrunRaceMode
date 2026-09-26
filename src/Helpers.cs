@@ -312,19 +312,37 @@ namespace SpeedrunRaceMode
         {
             List<string> regions = SlugcatStats.SlugcatStoryRegions(slug);
             string region = regions[UnityEngine.Random.Range(0, regions.Count)];
-            string roomsPath = AssetManager.ResolveDirectory("World" + Path.DirectorySeparatorChar + region + "-rooms");
+            string regionWorldPath = AssetManager.ResolveDirectory("World" + Path.DirectorySeparatorChar + region);
 
-            if (roomsPath == null) return "";
+            if (regionWorldPath == null) return "";
 
-            string[] roomFiles = Directory.GetFiles(roomsPath, "*_settings.txt");
+            string mapFile = AssetManager.ResolveFilePath("World" + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar + $"map_{region}-{slug.value.ToLowerInvariant()}.txt");
 
-            if (roomFiles.Length == 0) return "";
+            if (!File.Exists(mapFile))
+            {
+                mapFile = AssetManager.ResolveFilePath("World" + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar + $"map_{region}.txt");
+                if (!File.Exists(mapFile))
+                {
+                    Plugin.Logger.LogInfo("Something went mega wrong for " + mapFile);
+                    return "";
+                }
+            }
 
-            string randomFile = roomFiles[UnityEngine.Random.Range(0, roomFiles.Length)];
-            string room = Path.GetFileNameWithoutExtension(randomFile);
-            room = room.Substring(0, room.Length - "_settings".Length);
+            List<string> rooms = new();
 
-            return room;
+            foreach (string line in File.ReadAllLines(mapFile))
+            {
+                if (line.StartsWith("Connection:", StringComparison.OrdinalIgnoreCase))
+                {
+                    string[] parts = line.Substring("Connection:".Length).Split(',');
+
+                    rooms.Add(parts[0].Trim());
+                }
+            }
+
+            if (rooms.Count == 0) return "";
+
+            return rooms[UnityEngine.Random.Range(0, rooms.Count)];
         }
     }
 }
