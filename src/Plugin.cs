@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Security.Permissions;
 using BepInEx;
 using BepInEx.Logging;
@@ -6,6 +7,7 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RWCustom;
 using UnityEngine;
+using Watcher;
 
 // Allows access to private members
 #pragma warning disable CS0618

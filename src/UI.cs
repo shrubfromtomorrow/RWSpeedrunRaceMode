@@ -74,14 +74,14 @@ namespace SpeedrunRaceMode
             {
                 if (raceModeConfig.startingRoom != null)
                 {
-                    string startEntry = (RaceModeConfig.pauseRandom && !RaceModeConfig.startingRoomValue.IsNullOrWhiteSpace()) ? RaceModeConfig.startingRoomValue! : Helpers.SpeedrunRandomStart(self.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat);
+                    string startEntry = (RaceModeConfig.pauseRandom && !(RaceModeConfig.startingRoomValue is null)) ? RaceModeConfig.startingRoomValue! : Helpers.SpeedrunRandomStart(self.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat);
                     raceModeConfig.startingRoom.value = startEntry;
                     raceModeConfig.startingRoom.description = $"Room where the player will spawn and time will begin ({RaceModeConfig.startingRoomValue})";
                 }
 
                 if (raceModeConfig.endingRoom != null)
                 {
-                    string randomEnd = (RaceModeConfig.pauseRandom && !RaceModeConfig.endingRoomValue.IsNullOrWhiteSpace()) ? RaceModeConfig.endingRoomValue! : Helpers.SpeedrunRandomEnd(self.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat);
+                    string randomEnd = (RaceModeConfig.pauseRandom && !(RaceModeConfig.startingRoomValue is null)) ? RaceModeConfig.endingRoomValue! : Helpers.SpeedrunRandomEnd(self.manager.rainWorld.progression.miscProgressionData.currentlySelectedSinglePlayerSlugcat);
                     raceModeConfig.endingRoom.value = randomEnd;
                     raceModeConfig.endingRoom.description = $"Room where the player will spawn and time will begin ({RaceModeConfig.endingRoomValue})";
                 }
