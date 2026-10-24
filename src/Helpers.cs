@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using MonoMod.RuntimeDetour;
 using UnityEngine;
 using Watcher;
 using static SpeedrunRaceMode.CWTs;
@@ -20,6 +21,20 @@ namespace SpeedrunRaceMode
         {
             On.Creature.SpitOutOfShortCut += Creature_SpitOutOfShortCut; // track node player should come from
             On.RainWorldGame.ShutDownProcess += RainWorldGame_ShutDownProcess; // clear palyerDataTable since CWTs stink
+            new Hook(typeof(Watcher.AetherRainbow).GetMethod("InitiateSprites", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance), On_AetherRainbow_InitiateSprites);
+            new Hook(typeof(MoreSlugcats.FairyParticle).GetMethod("InitiateSprites", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance), On_FairyParticle_InitiateSprites);
+        }
+
+        private static void On_FairyParticle_InitiateSprites(Action<MoreSlugcats.FairyParticle, RoomCamera.SpriteLeaser, RoomCamera> orig, MoreSlugcats.FairyParticle self, RoomCamera.SpriteLeaser sLeaser, RoomCamera cam)
+        {
+            orig(self, sLeaser, cam);
+            self.ResetNoPositionChange();
+        }
+
+        private static void On_AetherRainbow_InitiateSprites(Action<Watcher.AetherRainbow, RoomCamera.SpriteLeaser, RoomCamera> orig, Watcher.AetherRainbow self, RoomCamera.SpriteLeaser sLeaser, RoomCamera cam)
+        {
+            orig(self, sLeaser, cam);
+            self.refreshOnViewed = true;
         }
 
         private static void RainWorldGame_ShutDownProcess(On.RainWorldGame.orig_ShutDownProcess orig, RainWorldGame self)
