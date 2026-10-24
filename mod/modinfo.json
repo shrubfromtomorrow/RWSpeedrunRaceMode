@@ -1,7 +1,7 @@
 {
   "id": "shrub.speedrunracemode",
   "name": "Speedrun Race Mode",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "authors": "shrubfromtomorrow",
   "description": "A mod that prevents the player from dying. Choose a start and end location, race others for faster and faster times. Dying will reset you to your last shortcut entrance.",
   "tags": [

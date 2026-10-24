@@ -19,7 +19,7 @@ namespace SpeedrunRaceMode;
 [BepInPlugin(ID, NAME, VERSION)]
 sealed class Plugin : BaseUnityPlugin
 {
-    public const string VERSION = "1.0.0";
+    public const string VERSION = "1.0.1";
     public const string ID = "shrub.speedrunracemode";
     public const string NAME = "Speedrun Race Mode";
 
