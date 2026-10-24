@@ -303,6 +303,17 @@ namespace SpeedrunRaceMode
                 Helpers.SendPlayerToShorcut(self);
                 playerData.saveMeNextTick = false;
             }
+            if (!RaceModeConfig.firstRoomReset && RaceModeConfig.startRoomSet)
+            {
+                var parts = RaceModeConfig.startingRoomValue?.Split('_');
+                if (parts != null && parts.Length > 1 && parts[1].FirstOrDefault() != 'S' && self.room.abstractRoom.name?.ToUpperInvariant() == RaceModeConfig.startingRoomValue)
+                {
+                    playerData ??= playerDataTable.GetOrCreateValue(self);
+                    playerData.destNode = playerData.destNode == -1 ? 0 : playerData.destNode;
+                    Helpers.SendPlayerToShorcut(self);
+                    RaceModeConfig.firstRoomReset = true;
+                }
+            }
         }
 
         private static void Creature_SuckedIntoShortCut(ILContext il)

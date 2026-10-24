@@ -35,10 +35,26 @@ namespace SpeedrunRaceMode
             On.MoreSlugcats.SpeedRunTimer.Update += SpeedRunTimer_Update; // end timer when reaching final room, do it in update so it can update once visually on warppoints
             On.Menu.Menu.ctor += Menu_ctor; // move infolabel (ui element descriptions) down on slugcat select menu so it doesn't interfere with holdbutton
             On.Menu.SlugcatSelectMenu.UpdateSelectedSlugcatInMiscProg += SlugcatSelectMenu_UpdateSelectedSlugcatInMiscProg; // reroll race mode stuffs on slugcat change in select menu
+            On.Room.NowViewed += On_OnNowViewed; // reset timer on entering starting room if lap mode is enabled
 
             On.HUD.Map.Update += Map_Update; // add or update death and end label
             On.HUD.Map.Draw += Map_Draw; // draw death and end label
             On.HUD.Map.ClearSprites += Map_ClearSprites; // clear death and end label
+        }
+
+        private static void On_OnNowViewed(On.Room.orig_NowViewed orig, Room self)
+        {
+            orig(self);
+            if (self.PlayersInRoom?.FirstOrDefault() is Player player && RaceModeConfig.raceMode && RaceModeConfig.startingRoomValue != null && self.abstractRoom.name?.ToUpperInvariant() == RaceModeConfig.startingRoomValue && Plugin.PluginInstance.srmOptions.LapMode.Value)
+            {
+                if (SpeedRunTimer.GetCampaignTimeTracker(player.slugcatStats.name) != null)
+                {
+                    SpeedRunTimer.CampaignTimeTracker tracker = new();
+                    self.game.rainWorld.progression.miscProgressionData.campaignTimers.Remove(player.slugcatStats.name.value);
+                    self.game.rainWorld.progression.miscProgressionData.campaignTimers.Add(player.slugcatStats.name.value, tracker);
+                    RainWorld.lockGameTimer = false;
+                }
+            }
         }
 
         private static void SpeedRunTimer_Update(On.MoreSlugcats.SpeedRunTimer.orig_Update orig, SpeedRunTimer self)
@@ -127,6 +143,7 @@ namespace SpeedrunRaceMode
                 {
                     Plugin.Logger.LogInfo("Setting start room");
                     RaceModeConfig.startRoomSet = true;
+                    RaceModeConfig.firstRoomReset = false;
                     return matchingKey;
                 }
             }
@@ -258,6 +275,7 @@ namespace SpeedrunRaceMode
         public static bool startRoomSet = false;
         public static string? startingRoomValue;
         public static string? endingRoomValue;
+        public static bool firstRoomReset = false;
 
         public MenuTabWrapper? tabWrapper;
 
